@@ -1,0 +1,29 @@
+name: AI 티 표현 제보
+description: AI가 쓴 글에서 자주 보이는 한국어 표현을 알려 주세요
+title: "[AI 티] "
+labels: ["ai-tell", "good first issue"]
+body:
+  - type: input
+    id: phrase
+    attributes:
+      label: 어떤 말인가요?
+      placeholder: 예) 도움이 되셨기를
+    validations:
+      required: true
+  - type: input
+    id: example
+    attributes:
+      label: 예문 한 줄 (직접 지어 써 주세요)
+      placeholder: 예) 이 글이 도움이 되셨기를 바랍니다.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 왜 AI 같다고 느꼈나요?
+      placeholder: 예) AI 글 끝에 거의 항상 붙어요.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 종류
+      options: [말투, 낱말, 연결어, 마무리, 기호, 모양, 잘 모르겠음]

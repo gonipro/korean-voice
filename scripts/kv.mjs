@@ -58,26 +58,17 @@ export function endingOf(s) {
 }
 export const ENDING_NAME = { da: "~다", eum: "~음·됨·임", yo: "~요", hapsyo: "~습니다", banmal: "반말(~어·~지)", etc: "그 밖" };
 
-// AI가 자주 쓰는 말·권유형 (사람 글에도 나오지만 몰려 있으면 AI 티가 난다)
-export const AI_TELLS = [
-  [/해\s?보세요|해\s?보시길|시도해\s?보세요|확인해\s?보세요|만나\s?보세요/, "권유형(해 보세요)"],
-  [/추천드립니다|추천합니다|권장합니다/, "추천드립니다"],
-  [/여러분/, "여러분"],
-  [/결론적으로|요약하자면|정리하자면|종합하면/, "결론적으로·요약하자면"],
-  [/다양한|다양하게/, "다양한"],
-  [/효과적(으로|인)|효율적(으로|인)/, "효과적·효율적"],
-  [/중요합니다|중요한 점은|핵심은 바로|핵심입니다/, "중요합니다·핵심은"],
-  [/~?에 대해 (알아보|살펴보)겠습니다|알아보겠습니다|살펴보겠습니다/, "알아보겠습니다"],
-  [/다음과 같습니다|아래와 같습니다/, "다음과 같습니다"],
-  [/뿐만 아니라|또한,|더불어|아울러/, "또한·뿐만 아니라"],
-  [/할 수 있습니다|수 있어요/, "~할 수 있습니다"],
-  [/것이 좋습니다|하는 것이 좋|것을 추천/, "~것이 좋습니다"],
-  [/이처럼|이렇듯|이와 같이/, "이처럼·이렇듯"],
-  [/도움이 되(셨|었)기를|도움이 되길 바랍니다|유익한 시간/, "도움이 되셨기를"],
-  [/함께 (해요|하세요|만들어)|함께라면/, "함께 ~해요"],
-  [/—|–/, "긴 줄표(—)"],
-  [/^(첫째|둘째|셋째|1\.|2\.|3\.)/, "번호 나열"],
-];
+// AI 티 표현은 data/ai-tells.json 에서 읽는다(누구나 보탤 수 있게 코드 밖에 둠).
+const squash = (x) => String(x).replace(/\s+/g, "");
+export function loadTells(file = new URL("../data/ai-tells.json", import.meta.url)) {
+  const d = JSON.parse(fs.readFileSync(file, "utf8"));
+  return d.tells.map((t) => {
+    const words = (t.words || []).map(squash).filter(Boolean);
+    const re = t.regex ? new RegExp(t.regex) : null;
+    return { id: t.id, label: t.label, test: (s) => (re && re.test(s.trim())) || words.some((w) => squash(s).includes(w)) };
+  });
+}
+export const AI_TELLS = loadTells();
 const FIRST_PERSON = /(?:^|[^가-힣])(나는|내가|난 |나도|나를|내 |저는|제가|저도|저를|제 |우리는|우리가)/;
 
 export function measure(texts) {
@@ -90,7 +81,7 @@ export function measure(texts) {
   const end = { da: 0, eum: 0, yo: 0, hapsyo: 0, banmal: 0, etc: 0 };
   all.forEach((s) => end[endingOf(s)]++);
   Object.keys(end).forEach((k) => (end[k] = end[k] / n));
-  const tells = all.filter((s) => AI_TELLS.some(([re]) => re.test(s))).length / n;
+  const tells = all.filter((s) => AI_TELLS.some((t) => t.test(s))).length / n;
   const first = all.filter((s) => FIRST_PERSON.test(" " + s)).length / n;
   const short = L.filter((x) => x <= 20).length / n;
   return { sentences: n, avgLen: r1(avg), sdLen: r1(sd), shortRatio: Math.round(short * 100) / 100, endings: Object.fromEntries(Object.entries(end).map(([k, v]) => [k, Math.round(v * 100) / 100])), firstPerson: Math.round(first * 100) / 100, aiTellRate: Math.round(tells * 100) / 100 };
@@ -131,7 +122,7 @@ export function score(profile, text) {
   const flags = [];
   sents.forEach((s, i) => {
     const why = [];
-    AI_TELLS.forEach(([re, name]) => { if (re.test(s)) why.push(name); });
+    AI_TELLS.forEach((t) => { if (t.test(s)) why.push(t.label); });
     const e = endingOf(s);
     if ((profile.endings[e] || 0) < 0.08 && e !== "etc") why.push(`평소에 거의 안 쓰는 끝맺음(${ENDING_NAME[e]}, 평소엔 ${ENDING_NAME[mainEnd]})`);
     if (s.length > Math.max(profile.avgLen + 2.2 * profile.sdLen, 70)) why.push(`평소보다 많이 긴 문장(${s.length}자)`);

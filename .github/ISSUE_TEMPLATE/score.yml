@@ -1,0 +1,12 @@
+name: 점수가 이상해요
+description: 사람이 쓴 글인데 AI 티가 높거나, 반대인 경우
+title: "[점수] "
+labels: ["score"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 어떤 글에서 어떻게 나왔나요?
+      description: 개인 정보는 빼고, 문장 몇 줄과 나온 점수를 적어 주세요.
+    validations:
+      required: true
