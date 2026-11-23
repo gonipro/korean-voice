@@ -1,0 +1,9 @@
+{
+  "name": "korean-voice",
+  "version": "0.1.0",
+  "description": "한국어 문체 점수 · AI 티 지우개: 내 글 5편으로 내 문체 기준을 만들고, 새 글의 나다움·AI 티를 점수로 보여 주고 내 말투로 고쳐 준다.",
+  "author": { "name": "고니프로", "url": "https://gonipro.app" },
+  "homepage": "https://github.com/gonipro/korean-voice",
+  "license": "MIT",
+  "skills": "./skills"
+}
